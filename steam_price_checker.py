@@ -4,6 +4,7 @@
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 import csv
+import math
 """
 Game, DLC type will have prices. Keep in mind there is also future games and free games that won't have price
 Legacy media, Unknown, Demo, Tool will not have prices
@@ -123,6 +124,9 @@ if __name__ == '__main__':
 
             print()  # To clear up the space before
 
+            total_item = len(actual_result)
+            max_scroll_times = math.ceil(total_item/5) - 1
+
             if len(actual_result) <= max_display:
 
                 for i in range(len(actual_result)):
@@ -144,14 +148,16 @@ if __name__ == '__main__':
             to_check = input()
 
             if to_check.isdigit():
+
+                # Setting all the necessary variables and passing down the app link to display_price
+                game_title = actual_result[int(to_check) - 1].find_all("td")[2].text
+                app_type = actual_result[int(to_check) - 1].find_all("td")[1].text
+                app_link = actual_result[int(to_check) - 1].td.a['href']
+                display_price(app_link)
+
                 break
             elif to_check == "": # User wants to quit
                 break
             else:
                 print("You did not enter a digit try again ", end="")
 
-        # Setting all the necessary variables and passing down the app link to display_price
-        game_title = actual_result[int(to_check)-1].find_all("td")[2].text
-        app_type = actual_result[int(to_check)-1].find_all("td")[1].text
-        app_link = actual_result[int(to_check)-1].td.a['href']
-        display_price(app_link)
