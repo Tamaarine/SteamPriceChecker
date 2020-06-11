@@ -94,6 +94,24 @@ def display_price(app_id_link):
                     break
 
 
+def handle_scrolling(results, max_Scroll):
+
+    # The items can be displayed in 5 or less items no need to scroll
+    if len(actual_result) <= max_display:
+
+        for i in range(len(actual_result)):
+            print("[", i + 1, "]", results[i].find_all("td")[2].text, "\n")
+
+    else:
+
+        global lower_list
+        global upper_list
+
+        # Scrolling is required
+        for i in range(lower_list, upper_list+1):
+            print("[", i, "]", results[i-1].find_all("td")[2].text, "\n")
+
+
 # Main loop
 if __name__ == '__main__':
 
@@ -110,7 +128,7 @@ if __name__ == '__main__':
         # Opening and getting the webpage source
         respond = Request(inquiry+game_title, headers={'User-Agent': 'XYZ/3.0'})
 
-        response = urlopen(respond, timeout=3).read()
+        response = urlopen(respond, timeout=5).read()
 
         # Putting it through beautifulsoup and getting the soup object
         soup = BeautifulSoup(response, 'lxml')
@@ -124,40 +142,59 @@ if __name__ == '__main__':
 
             print()  # To clear up the space before
 
+            # Working code right here
             total_item = len(actual_result)
-            max_scroll_times = math.ceil(total_item/5) - 1
+            max_scroll_times = math.ceil(total_item / 5) - 1
 
-            if len(actual_result) <= max_display:
+            global lower_list
+            lower_list = 1
+            global upper_list
+            upper_list = 5
 
-                for i in range(len(actual_result)):
-                    print("[", i + 1, "]", actual_result[i].find_all("td")[2].text, "\n")
+            # This while loop will keep going until the user input in an valid digit to check
+            # It will also handle the scrolling of the page
+            while True:
 
-            else:
+                handle_scrolling(actual_result, max_scroll_times)
 
-                for i in range(0, max_display):
-                    print("[", i + 1, "]", actual_result[i].find_all("td")[2].text, "\n")
+                print("Pick a item to check price")
+                print("[Next] - Scroll for the next items'")
+                print("[Prev] - Go back to the previous items")
+
+                # Then telling the user to input a choice from the menu
+                user_input = input("Please enter in a command: ")
+
+                # Increment the counter
+                if user_input.lower() == "next":
+
+                    if upper_list + 5 > len(actual_result) and upper_list != len(actual_result):
+                        lower_list = upper_list + 1
+                        upper_list = len(actual_result)
+                    elif upper_list != len(actual_result):
+                        lower_list = upper_list + 1
+                        upper_list = upper_list + 5
+                # Decrement the counter
+                elif user_input.lower() == "prev":
+                    if upper_list == len(actual_result):
+                        upper_list = lower_list - 1
+                        lower_list = upper_list - 4
+                    if lower_list != 1:
+                        upper_list = lower_list - 1
+                        lower_list = lower_list - 5
+                elif user_input.isdigit():
+
+                    # Setting all the necessary variables and passing down the app link to display_price
+                    game_title = actual_result[int(user_input) - 1].find_all("td")[2].text
+                    app_type = actual_result[int(user_input) - 1].find_all("td")[1].text
+                    app_link = actual_result[int(user_input) - 1].td.a['href']
+                    display_price(app_link)
+
+                    break
+                elif user_input == "":  # User wants to quit
+                    break
+                else:
+                    print("You did not enter a digit try again ", end="")
 
         except Exception as e:    # No results found
 
             print("\nNo results found\n")
-
-        print("Which game would you like to check?: ", end="")
-        while True:
-
-            # Then telling the user to input a choice from the menu
-            to_check = input()
-
-            if to_check.isdigit():
-
-                # Setting all the necessary variables and passing down the app link to display_price
-                game_title = actual_result[int(to_check) - 1].find_all("td")[2].text
-                app_type = actual_result[int(to_check) - 1].find_all("td")[1].text
-                app_link = actual_result[int(to_check) - 1].td.a['href']
-                display_price(app_link)
-
-                break
-            elif to_check == "": # User wants to quit
-                break
-            else:
-                print("You did not enter a digit try again ", end="")
-
