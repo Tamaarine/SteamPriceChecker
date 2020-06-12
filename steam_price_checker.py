@@ -19,7 +19,7 @@ app_type = ""
 inquiry = 'https://steamdb.info/search/?a=app&q='
 
 # Testing out csv first
-csv_file = open('../../Downloads/data.csv', 'w')
+csv_file = open('../../Downloads/data.csv', 'a')
 
 csv_writer = csv.writer(csv_file)
 
@@ -94,12 +94,12 @@ def display_price(app_id_link):
                     break
 
 
-def handle_scrolling(results, max_Scroll):
+def handle_scrolling(results):
 
     # The items can be displayed in 5 or less items no need to scroll
-    if len(actual_result) <= max_display:
+    if len(results) <= max_display:
 
-        for i in range(len(actual_result)):
+        for i in range(len(results)):
             print("[", i + 1, "]", results[i].find_all("td")[2].text, "\n")
 
     else:
@@ -111,23 +111,21 @@ def handle_scrolling(results, max_Scroll):
         for i in range(lower_list, upper_list+1):
             print("[", i, "]", results[i-1].find_all("td")[2].text, "\n")
 
+def search_games():
 
-# Main loop
-if __name__ == '__main__':
-
+    # Function that performs the searching
     while True:
 
         # Asking for input
-        game_title = input("Search for game: ")
+        input_game_title = input("Search for game: ")
 
-        if game_title == '': # User wants to be out
+        if input_game_title == '':  # User wants to be out
             break
 
-        game_title = game_title.replace(" ", "+") # Replace any spaces with percentage signs
+        input_game_title = input_game_title.replace(" ", "+")  # Replace any spaces with percentage signs
 
         # Opening and getting the webpage source
-        respond = Request(inquiry+game_title, headers={'User-Agent': 'XYZ/3.0'})
-
+        respond = Request(inquiry + input_game_title, headers={'User-Agent': 'XYZ/3.0'})
         response = urlopen(respond, timeout=5).read()
 
         # Putting it through beautifulsoup and getting the soup object
@@ -136,15 +134,13 @@ if __name__ == '__main__':
         # Finding the result table
         table = soup.find('table', class_="table-bordered")
 
-        try:    # Next find the results in a try block
+        try:  # Next find the results in a try block
 
             actual_result = table.find_all('tr', class_="app")
-
             print()  # To clear up the space before
 
             # Working code right here
             total_item = len(actual_result)
-            max_scroll_times = math.ceil(total_item / 5) - 1
 
             global lower_list
             lower_list = 1
@@ -155,11 +151,10 @@ if __name__ == '__main__':
             # It will also handle the scrolling of the page
             while True:
 
-                handle_scrolling(actual_result, max_scroll_times)
-
+                handle_scrolling(actual_result)
                 print("Pick a item to check price")
-                print("[Next] - Scroll for the next items'")
-                print("[Prev] - Go back to the previous items")
+                print("[Next] - Scroll for the next items")
+                print("[Prev] - Go back to the previous items\n")
 
                 # Then telling the user to input a choice from the menu
                 user_input = input("Please enter in a command: ")
@@ -183,18 +178,68 @@ if __name__ == '__main__':
                         lower_list = lower_list - 5
                 elif user_input.isdigit():
 
-                    # Setting all the necessary variables and passing down the app link to display_price
-                    game_title = actual_result[int(user_input) - 1].find_all("td")[2].text
-                    app_type = actual_result[int(user_input) - 1].find_all("td")[1].text
-                    app_link = actual_result[int(user_input) - 1].td.a['href']
-                    display_price(app_link)
+                    int_input = int(user_input)
 
-                    break
+                    if int_input >= lower_list and int_input <= upper_list:
+
+                        global game_title
+                        global app_type
+
+                        # Setting all the necessary variables and passing down the app link to display_price
+                        game_title = actual_result[int_input - 1].find_all("td")[2].text
+                        app_type = actual_result[int_input - 1].find_all("td")[1].text
+                        app_link = actual_result[int_input - 1].td.a['href']
+                        display_price(app_link)
+
+                        break
+                    else:
+                        print("You did not enter in a valid item number")
+
                 elif user_input == "":  # User wants to quit
                     break
                 else:
                     print("You did not enter a digit try again ", end="")
 
-        except Exception as e:    # No results found
+        except Exception as e:  # No results found
 
             print("\nNo results found\n")
+
+def favorite_list():
+
+    # Function that performs adding to the favorite list
+    # This can let you add games to a watch list which gives you updates on the current price
+    # and when you run the script the first time it will run through the games on your favorite list
+    # to see whether there are discounts or not
+    list_of_games = []
+
+    list_of_games.append(input("Which game would you like to put on the watch list?"))
+
+    for game in list_of_games:
+        print(game)
+
+
+
+def free_to_play():
+    print("Not implemented yet")
+
+
+# Main loop
+if __name__ == '__main__':
+
+    while True:
+
+        # Main menu options
+        print("(A) - Search price for games")
+        print("(B) - Favorite lists")
+        print("(C) - Free to play games")
+        menu_input = input("Enter in options: ")
+
+        if menu_input.lower() == "a": # Search for pricing of games
+            search_games()
+        elif menu_input.lower() == "b":
+            favorite_list()
+        elif menu_input.lower() == "c":
+            free_to_play()
+        elif menu_input == "":
+            break
+
