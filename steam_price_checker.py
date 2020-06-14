@@ -14,6 +14,7 @@ Legacy media, Unknown, Demo, Tool will not have prices
 max_display = 5
 game_title = ""
 app_type = ""
+app_link = ""
 
 # Link with inquiry
 inquiry = 'https://steamdb.info/search/?a=app&q='
@@ -111,98 +112,112 @@ def handle_scrolling(results):
         for i in range(lower_list, upper_list+1):
             print("[", i, "]", results[i-1].find_all("td")[2].text, "\n")
 
-def search_games():
 
+def search_games(given_game):
+
+    global lower_list
+    global upper_list
+    global game_title
+    global app_type
+    global app_link
     # Function that performs the searching
+
+    game_name = given_game.replace(" ", "+")  # Replace any spaces with percentage signs
+
+    # Opening and getting the webpage source
+    respond = Request(inquiry + game_name, headers={'User-Agent': 'XYZ/3.0'})
+    response = urlopen(respond, timeout=5).read()
+
+    # Putting it through beautifulsoup and getting the soup object
+    soup = BeautifulSoup(response, 'lxml')
+
+    # Finding the result table
+    table = soup.find('table', class_="table-bordered")
+
+    try:  # Next find the results in a try block
+
+        actual_result = table.find_all('tr', class_="app")
+        print()  # To clear up the space before
+
+        # Working code right here
+        total_item = len(actual_result)
+
+        lower_list = 1
+        upper_list = 5
+
+        # This while loop will keep going until the user input in an valid digit to check
+        # It will also handle the scrolling of the page
+        while True:
+
+            handle_scrolling(actual_result)
+            print("Pick a item to check price")
+            print("[Next] - Scroll for the next items")
+            print("[Prev] - Go back to the previous items\n")
+
+            # Then telling the user to input a choice from the menu
+            user_input = input("Please enter in a command: ")
+
+            # Increment the counter
+            if user_input.lower() == "next":
+
+                if upper_list + 5 > len(actual_result) and upper_list != len(actual_result):
+                    lower_list = upper_list + 1
+                    upper_list = len(actual_result)
+                elif upper_list != len(actual_result):
+                    lower_list = upper_list + 1
+                    upper_list = upper_list + 5
+            # Decrement the counter
+            elif user_input.lower() == "prev":
+                if upper_list == len(actual_result):
+                    upper_list = lower_list - 1
+                    lower_list = upper_list - 4
+                if lower_list != 1:
+                    upper_list = lower_list - 1
+                    lower_list = lower_list - 5
+            elif user_input.isdigit():
+
+                int_input = int(user_input)
+
+                if int_input >= lower_list and int_input <= upper_list:
+
+                    # Setting all the necessary variables and passing down the app link to display_price
+                    game_title = actual_result[int_input - 1].find_all("td")[2].text
+                    app_type = actual_result[int_input - 1].find_all("td")[1].text
+                    app_link = actual_result[int_input - 1].td.a['href']
+
+                    break # Breaking the inner for loop
+
+                else:
+                    print("You did not enter in a valid item number")
+
+            elif user_input == "":  # User wants to quit
+                app_link = None
+
+                break
+            else:
+                print("You did not enter a digit try again ", end="")
+
+    except Exception as e:  # No results found
+
+        print("\nNo results found\n")
+
+    return app_link
+
+
+def option_a():
     while True:
 
-        # Asking for input
         input_game_title = input("Search for game: ")
 
         if input_game_title == '':  # User wants to be out
             break
 
-        input_game_title = input_game_title.replace(" ", "+")  # Replace any spaces with percentage signs
+        link = search_games(input_game_title)
 
-        # Opening and getting the webpage source
-        respond = Request(inquiry + input_game_title, headers={'User-Agent': 'XYZ/3.0'})
-        response = urlopen(respond, timeout=5).read()
+        if link is None:
+            break
+        display_price(link)
 
-        # Putting it through beautifulsoup and getting the soup object
-        soup = BeautifulSoup(response, 'lxml')
-
-        # Finding the result table
-        table = soup.find('table', class_="table-bordered")
-
-        try:  # Next find the results in a try block
-
-            actual_result = table.find_all('tr', class_="app")
-            print()  # To clear up the space before
-
-            # Working code right here
-            total_item = len(actual_result)
-
-            global lower_list
-            lower_list = 1
-            global upper_list
-            upper_list = 5
-
-            # This while loop will keep going until the user input in an valid digit to check
-            # It will also handle the scrolling of the page
-            while True:
-
-                handle_scrolling(actual_result)
-                print("Pick a item to check price")
-                print("[Next] - Scroll for the next items")
-                print("[Prev] - Go back to the previous items\n")
-
-                # Then telling the user to input a choice from the menu
-                user_input = input("Please enter in a command: ")
-
-                # Increment the counter
-                if user_input.lower() == "next":
-
-                    if upper_list + 5 > len(actual_result) and upper_list != len(actual_result):
-                        lower_list = upper_list + 1
-                        upper_list = len(actual_result)
-                    elif upper_list != len(actual_result):
-                        lower_list = upper_list + 1
-                        upper_list = upper_list + 5
-                # Decrement the counter
-                elif user_input.lower() == "prev":
-                    if upper_list == len(actual_result):
-                        upper_list = lower_list - 1
-                        lower_list = upper_list - 4
-                    if lower_list != 1:
-                        upper_list = lower_list - 1
-                        lower_list = lower_list - 5
-                elif user_input.isdigit():
-
-                    int_input = int(user_input)
-
-                    if int_input >= lower_list and int_input <= upper_list:
-
-                        global game_title
-                        global app_type
-
-                        # Setting all the necessary variables and passing down the app link to display_price
-                        game_title = actual_result[int_input - 1].find_all("td")[2].text
-                        app_type = actual_result[int_input - 1].find_all("td")[1].text
-                        app_link = actual_result[int_input - 1].td.a['href']
-                        display_price(app_link)
-
-                        break
-                    else:
-                        print("You did not enter in a valid item number")
-
-                elif user_input == "":  # User wants to quit
-                    break
-                else:
-                    print("You did not enter a digit try again ", end="")
-
-        except Exception as e:  # No results found
-
-            print("\nNo results found\n")
 
 def favorite_list():
 
@@ -212,15 +227,36 @@ def favorite_list():
     # to see whether there are discounts or not
     list_of_games = []
 
-    list_of_games.append(input("Which game would you like to put on the watch list?"))
+    # Read the list of games that is in the file first
+    file = open("data.csv", "r")
+
+    print(file.readline())
+
+    # Need to go online and find title
+    # Writing the file
+    game_name = input("Which game would you like to add?: ")
+    input_game_title = game_name.replace(" ", "+")  # Replace any spaces with percentage signs
+
+    # Opening and getting the webpage source
+    respond = Request(inquiry + input_game_title, headers={'User-Agent': 'XYZ/3.0'})
+    response = urlopen(respond, timeout=5).read()
+
+    soup = BeautifulSoup(response, 'lxml')
+
+    search_games(game_name)
+
+    file = open('data.csv', 'a')
+    file.write(input("Game?: ")+"\n")
 
     for game in list_of_games:
         print(game)
 
 
-
 def free_to_play():
     print("Not implemented yet")
+
+
+# def start_up():
 
 
 # Main loop
@@ -235,11 +271,13 @@ if __name__ == '__main__':
         menu_input = input("Enter in options: ")
 
         if menu_input.lower() == "a": # Search for pricing of games
-            search_games()
+            option_a()
         elif menu_input.lower() == "b":
-            favorite_list()
+            # favorite_list()
+            print("kill me")
         elif menu_input.lower() == "c":
-            free_to_play()
+            # free_to_play()
+            print("e")
         elif menu_input == "":
             break
 
