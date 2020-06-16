@@ -4,17 +4,13 @@
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 import csv
-import math
-"""
-Game, DLC type will have prices. Keep in mind there is also future games and free games that won't have price
-Legacy media, Unknown, Demo, Tool will not have prices
-"""
 
 # Constants
 max_display = 5
 game_title = ""
 app_type = ""
 app_link = ""
+app_before = 'https://steamdb.info'
 
 # Link with inquiry
 inquiry = 'https://steamdb.info/search/?a=app&q='
@@ -29,9 +25,7 @@ csv_writer.writerow(['Game', 'Price', 'Date Updated'])
 
 def display_price(app_id_link):
 
-    link = 'https://steamdb.info' + app_id_link
-
-    respond = Request(link, headers={'User-Agent': 'XYZ/3.0'})
+    respond = Request(app_before + app_id_link, headers={'User-Agent': 'XYZ/3.0'})
 
     response = urlopen(respond, timeout=3).read()
 
@@ -241,12 +235,17 @@ def favorite_list():
     respond = Request(inquiry + input_game_title, headers={'User-Agent': 'XYZ/3.0'})
     response = urlopen(respond, timeout=5).read()
 
-    soup = BeautifulSoup(response, 'lxml')
+    soup = BeautifulSoup(response, 'html.parser')
 
-    search_games(game_name)
+    link = search_games(game_name)
 
-    file = open('data.csv', 'a')
-    file.write(input("Game?: ")+"\n")
+    print(game_title)
+    print(inquiry)
+    print(link)
+    text = game_title + ": " + app_before + link
+
+    file = open("data.csv", "a", encoding='utf-8')
+    file.write(text + "\n")
 
     for game in list_of_games:
         print(game)
@@ -273,8 +272,7 @@ if __name__ == '__main__':
         if menu_input.lower() == "a": # Search for pricing of games
             option_a()
         elif menu_input.lower() == "b":
-            # favorite_list()
-            print("kill me")
+            favorite_list()
         elif menu_input.lower() == "c":
             # free_to_play()
             print("e")
