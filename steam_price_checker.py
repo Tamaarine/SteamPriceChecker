@@ -3,7 +3,6 @@
 # ------
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
-import csv
 
 # Constants
 max_display = 5
@@ -14,13 +13,6 @@ app_before = 'https://steamdb.info'
 
 # Link with inquiry
 inquiry = 'https://steamdb.info/search/?a=app&q='
-
-# Testing out csv first
-csv_file = open('../../Downloads/data.csv', 'a')
-
-csv_writer = csv.writer(csv_file)
-
-csv_writer.writerow(['Game', 'Price', 'Date Updated'])
 
 
 def display_price(app_id_link):
@@ -213,8 +205,7 @@ def option_a():
         display_price(link)
 
 
-def favorite_list():
-
+def add_game_favorite():
     # Function that performs adding to the favorite list
     # This can let you add games to a watch list which gives you updates on the current price
     # and when you run the script the first time it will run through the games on your favorite list
@@ -222,9 +213,7 @@ def favorite_list():
     list_of_games = []
 
     # Read the list of games that is in the file first
-    file = open("data.csv", "r")
-
-    print(file.readline())
+    file = open("data.txt", "r")
 
     # Need to go online and find title
     # Writing the file
@@ -244,11 +233,48 @@ def favorite_list():
     print(link)
     text = game_title + ": " + app_before + link
 
-    file = open("data.csv", "a", encoding='utf-8')
+    file = open("data.txt", "a", encoding='utf-8')
     file.write(text + "\n")
 
-    for game in list_of_games:
-        print(game)
+    print(game_title, "have been successfully added to your favorite list")
+
+
+def print_favorite_list():
+
+    file = open("data.txt", "r+")
+
+    for line in file.read().splitlines():
+        print(line)
+
+
+def check_link_price(link):
+
+    # Given a SteamApp link return a String representing the price of the given game
+    
+
+
+
+def favorite_list():
+
+    while True:
+
+        print("(A) - Check price of your favorite list")
+        print("(B) - Add new game to favorite list")
+        print("(C) - Remove a game from favorite list")
+        print("(D) - See your favorite list")
+        user_choice = input("What would you like to do?: ")
+
+        if user_choice.lower() == 'a':
+            print("Check game price")
+        elif user_choice.lower() == 'b':
+            add_game_favorite()
+        elif user_choice.lower() == 'c':
+            print("Remove game")
+        elif user_choice.lower() == 'd':
+            print_favorite_list()
+        elif user_choice.lower() == '': # User want to quit
+            break
+
 
 
 def free_to_play():
