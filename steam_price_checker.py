@@ -17,7 +17,7 @@ inquiry = 'https://steamdb.info/search/?a=app&q='
 
 def display_price(app_id_link):
 
-    respond = Request(app_before + app_id_link, headers={'User-Agent': 'XYZ/3.0'})
+    respond = Request(app_id_link, headers={'User-Agent': 'XYZ/3.0'})
 
     response = urlopen(respond, timeout=3).read()
 
@@ -202,7 +202,7 @@ def option_a():
 
         if link is None:
             break
-        display_price(link)
+        display_price(app_before+link)
 
 
 def add_game_favorite():
@@ -228,53 +228,110 @@ def add_game_favorite():
 
     link = search_games(game_name)
 
-    print(game_title)
-    print(inquiry)
-    print(link)
-    text = game_title + ": " + app_before + link
+    # Make sure that the link returned from search is not None before we write it into the file
+    if link is not None:
 
-    file = open("data.txt", "a", encoding='utf-8')
-    file.write(text + "\n")
+        text = "[" + game_title + "]:"+ app_before + link
 
-    print(game_title, "have been successfully added to your favorite list")
+        file = open("data.txt", "a", encoding='utf-8')
+        file.write(text + "\n")
 
+        print(game_title, "have been successfully added to your favorite list")
+
+    file.close()
 
 def print_favorite_list():
 
     file = open("data.txt", "r+")
 
+    output = "Favorite List!\n" + ("-" * 15) + "\n"
+
     for line in file.read().splitlines():
-        print(line)
+        line = line.strip("\n")
+        r_bracket = line.rfind("]")
+        link = line[r_bracket+2:]
+        output += line[0:r_bracket+1] + get_link_price(link) + "\n\n"
+
+    print(output)
+    file.close()
 
 
-def check_link_price(link):
+def get_link_lowest_price(link):
+    # Given a SteamApp link return a String representing the lowest price of the given game
+    # Opening and getting the webpage source
+    respond = Request(link, headers={'User-Agent': 'XYZ/3.0'})
+    response = urlopen(respond, timeout=5).read()
+
+    # Putting it through beautifulsoup and getting the soup object
+    soup = BeautifulSoup(response, 'lxml')
+
+    price_table = soup.find('table', class_="table table-fixed table-prices table-hover table-sortable")
+    current_row = price_table.find('tr', class_="table-prices-current")
+    tds = current_row.find_all('td')
+
+    return tds[3].text
+
+
+def get_link_price(link):
 
     # Given a SteamApp link return a String representing the price of the given game
-    
+    # Opening and getting the webpage source
+    respond = Request(link, headers={'User-Agent': 'XYZ/3.0'})
+    response = urlopen(respond, timeout=5).read()
+
+    # Putting it through beautifulsoup and getting the soup object
+    soup = BeautifulSoup(response, 'lxml')
+
+    price_table = soup.find('table', class_="table table-fixed table-prices table-hover table-sortable")
+    current_row = price_table.find('tr', class_="table-prices-current")
+    tds = current_row.find_all('td')
+
+    return tds[1].text
+
+
+def remove_game(index_to_delete):
+
+    # This function will be removing game from the favorite list
+    # Getting the lines and putting it into an array
+    file = open('data.txt', 'r')
+    lines = file.readlines()
+    file.close()
+
+    del lines[index_to_delete]
+
+    file = open('data.txt', 'w')
+    for line in lines:
+        file.write(line)
+
+    file.close()
+
+
+def ask_game_to_remove():
+
+    print_favorite_list()
+
+    index = input("Which game would you like to remove from your favorite list?")
+    print(index)
 
 
 
-def favorite_list():
+def option_b():
 
     while True:
 
         print("(A) - Check price of your favorite list")
         print("(B) - Add new game to favorite list")
         print("(C) - Remove a game from favorite list")
-        print("(D) - See your favorite list")
         user_choice = input("What would you like to do?: ")
 
         if user_choice.lower() == 'a':
-            print("Check game price")
+            print_favorite_list()
         elif user_choice.lower() == 'b':
             add_game_favorite()
         elif user_choice.lower() == 'c':
-            print("Remove game")
-        elif user_choice.lower() == 'd':
-            print_favorite_list()
+            ask_game_to_remove()
         elif user_choice.lower() == '': # User want to quit
             break
-
 
 
 def free_to_play():
@@ -298,10 +355,10 @@ if __name__ == '__main__':
         if menu_input.lower() == "a": # Search for pricing of games
             option_a()
         elif menu_input.lower() == "b":
-            favorite_list()
+            option_b()
         elif menu_input.lower() == "c":
             # free_to_play()
-            print("e")
+            print("Free play")
         elif menu_input == "":
             break
 
