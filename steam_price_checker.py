@@ -187,6 +187,8 @@ def search_games(given_game):
 
         print("\nNo results found\n")
 
+        app_link = None
+
     return app_link
 
 
@@ -236,11 +238,11 @@ def add_game_favorite():
         file = open("data.txt", "a", encoding='utf-8')
         file.write(text + "\n")
 
-        print(game_title, "have been successfully added to your favorite list")
+        print(game_title, "have been successfully added to your favorite list", end="\n\n")
 
     file.close()
 
-def print_favorite_list():
+def print_favorite_list_with_price():
 
     file = open("data.txt", "r+")
 
@@ -251,6 +253,25 @@ def print_favorite_list():
         r_bracket = line.rfind("]")
         link = line[r_bracket+2:]
         output += line[0:r_bracket+1] + get_link_price(link) + "\n\n"
+
+    print(output)
+    file.close()
+
+
+def print_favorite_list():
+
+    file = open("data.txt", "r+")
+
+    output = "Favorite List!\n" + ("-" * 15) + "\n"
+
+    global counter
+    counter = 1
+
+    for line in file.read().splitlines():
+        line = line.strip("\n")
+        r_bracket = line.rfind("]")
+        output += str(counter) + ". " + line[0:r_bracket+1] + "\n\n"
+        counter += 1
 
     print(output)
     file.close()
@@ -297,6 +318,8 @@ def remove_game(index_to_delete):
     lines = file.readlines()
     file.close()
 
+    removed_game_title = lines[index_to_delete]
+
     del lines[index_to_delete]
 
     file = open('data.txt', 'w')
@@ -305,14 +328,34 @@ def remove_game(index_to_delete):
 
     file.close()
 
+    return removed_game_title
+
 
 def ask_game_to_remove():
 
+    global counter
+
     print_favorite_list()
 
-    index = input("Which game would you like to remove from your favorite list?")
-    print(index)
+    # Make sure the input_index is valid
+    while True:
 
+        input_index = input("Which game would you like to remove from your favorite list?: ")
+
+        if input_index == "":
+            break
+        elif int(input_index) < counter and int(input_index) >= 1:
+            removed_game = remove_game(int(input_index) - 1)
+
+            removed_game = removed_game[0:removed_game.find("]") + 1]
+
+            print(removed_game, "have been successfully removed from your favorite game")
+
+            break
+        elif not input_index.isdigit():
+            print("You must enter in an digit to remove a game")
+        else:
+            print("Invalid game to remove from the favorite list")
 
 
 def option_b():
@@ -323,9 +366,10 @@ def option_b():
         print("(B) - Add new game to favorite list")
         print("(C) - Remove a game from favorite list")
         user_choice = input("What would you like to do?: ")
+        print()
 
         if user_choice.lower() == 'a':
-            print_favorite_list()
+            print_favorite_list_with_price()
         elif user_choice.lower() == 'b':
             add_game_favorite()
         elif user_choice.lower() == 'c':
@@ -350,7 +394,9 @@ if __name__ == '__main__':
         print("(A) - Search price for games")
         print("(B) - Favorite lists")
         print("(C) - Free to play games")
-        menu_input = input("Enter in options: ")
+        print("Enter in option: ", end="")
+        menu_input = input()
+        print()
 
         if menu_input.lower() == "a": # Search for pricing of games
             option_a()
