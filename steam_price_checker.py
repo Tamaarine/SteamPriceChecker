@@ -564,7 +564,7 @@ def main():
         # Main menu options
         print("(A) - Search price for games")
         print("(B) - Favorite lists")
-        print("(C) - Free to play games")
+        print("(C) - Play for free games")
         print("Enter in option: ", end="")
         menu_input = input()
         print()
