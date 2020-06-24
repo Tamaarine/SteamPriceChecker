@@ -14,13 +14,12 @@ app_link = ""
 app_before = 'https://steamdb.info'
 app_sale_page = 'https://steamdb.info/sales/'
 steam_store = 'https://store.steampowered.com/'
-
-# Link with inquiry
 inquiry = 'https://steamdb.info/search/?a=app&q='
 
 
 def display_price(app_id_link):
 
+    # This if for option_a which display the price of a given link
     respond = Request(app_id_link, headers={'User-Agent': 'XYZ/3.0'})
 
     response = urlopen(respond, timeout=3).read()
@@ -87,6 +86,7 @@ def display_price(app_id_link):
 
 def handle_scrolling(results):
 
+    # Handles the scrolling for the results
     # The items can be displayed in 5 or less items no need to scroll
     if len(results) <= max_display:
 
@@ -105,6 +105,7 @@ def handle_scrolling(results):
 
 def search_games(given_game):
 
+    # Searches game based on the given game name
     global lower_list
     global upper_list
     global game_title
@@ -208,7 +209,9 @@ def search_games(given_game):
 
 def option_a():
 
+    # For option_a which is searching for game price
     tprint("Search Game Price!", font="small")
+
     while True:
 
         input_game_title = input("Search for game: ")
@@ -267,8 +270,10 @@ def add_game_favorite():
 
     file.close()
 
+
 def print_favorite_list_with_price():
 
+    # Print the user's favorite list with price
     file = open("data.txt", "r+", encoding="utf-8-sig", errors="ignore")
     file_array = file.read().splitlines()
 
@@ -308,6 +313,7 @@ def print_favorite_list_with_price():
 
 def print_favorite_list():
 
+    # Print the user's favorite list game title only
     file = open("data.txt", "r+", encoding="utf-8-sig", errors="ignore")
     file_array = file.read().splitlines()
 
@@ -343,6 +349,7 @@ def print_favorite_list():
 
 
 def get_link_lowest_price(link):
+
     # Given a SteamApp link return a String representing the lowest price of the given game
     # Opening and getting the webpage source
     respond = Request(link, headers={'User-Agent': 'XYZ/3.0'})
@@ -398,6 +405,7 @@ def remove_game(index_to_delete):
 
 def ask_game_to_remove():
 
+    # Ask the user which game to remove from their favorite list
     global counter
 
     results = print_favorite_list()
@@ -433,17 +441,20 @@ def ask_game_to_remove():
 
 def introduction():
 
+    # Run when the program starts
     tprint("Steam Price Checker", font="small")
     tprint("Welcome...", font="small")
     tprint(getpass.getuser(), font="small")
 
 def favorite_list_intro():
 
+    # For favorite list introduction
     tprint("Favorite List Menu", font="small")
 
 
 def option_b():
 
+    # Option_b for favorite menu
     favorite_list_intro()
 
     while True:
@@ -506,6 +517,7 @@ def free_game_intro():
 
 def option_c():
 
+    # Option_c for getting all of the play for free games
     free_game_intro()
 
     print("Fetching data...", end="\n\n")
@@ -530,7 +542,7 @@ def option_c():
 def start_up():
 
     # When the program is ranned we will call the start_up method, which contains introduction
-    # And running the favorite list check
+    # And running the favorite list check. This is optional
     introduction()
 
     file = open("data.txt", "r", encoding="utf-8-sig", errors="ignore")
@@ -541,9 +553,10 @@ def start_up():
         # We only print if the file is not empty
         print_favorite_list_with_price()
 
-# Main loop
+
 def main():
 
+    # Main loop
     introduction()
 
     while True:
@@ -564,6 +577,7 @@ def main():
             option_c()
         elif menu_input == "":
             break
+
 
 if __name__ == "__main__":
 
