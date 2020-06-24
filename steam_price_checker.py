@@ -4,6 +4,7 @@
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from art import tprint
+import getpass
 
 # Constants
 max_display = 5
@@ -12,6 +13,7 @@ app_type = ""
 app_link = ""
 app_before = 'https://steamdb.info'
 app_sale_page = 'https://steamdb.info/sales/'
+steam_store = 'https://store.steampowered.com/'
 
 # Link with inquiry
 inquiry = 'https://steamdb.info/search/?a=app&q='
@@ -133,6 +135,11 @@ def search_games(given_game):
         lower_list = 1
         upper_list = 5
 
+        # Setting the upper_list to prevent user inputting higher number into search result
+        # For 5 or less items
+        if total_item <= max_display:
+            upper_list = total_item
+
         # This while loop will keep going until the user input in an valid digit to check
         # It will also handle the scrolling of the page
         while True:
@@ -148,20 +155,25 @@ def search_games(given_game):
             # Increment the counter
             if user_input.lower() == "next":
 
-                if upper_list + 5 > len(actual_result) and upper_list != len(actual_result):
-                    lower_list = upper_list + 1
-                    upper_list = len(actual_result)
-                elif upper_list != len(actual_result):
-                    lower_list = upper_list + 1
-                    upper_list = upper_list + 5
+                if total_item > max_display:
+
+                    if upper_list + 5 > len(actual_result) and upper_list != len(actual_result):
+                        lower_list = upper_list + 1
+                        upper_list = len(actual_result)
+                    elif upper_list != len(actual_result):
+                        lower_list = upper_list + 1
+                        upper_list = upper_list + 5
             # Decrement the counter
             elif user_input.lower() == "prev":
-                if upper_list == len(actual_result):
-                    upper_list = lower_list - 1
-                    lower_list = upper_list - 4
-                if lower_list != 1:
-                    upper_list = lower_list - 1
-                    lower_list = lower_list - 5
+
+                if total_item > max_display:
+                    if upper_list == len(actual_result):
+                        upper_list = lower_list - 1
+                        lower_list = upper_list - 4
+                    if lower_list != 1:
+                        upper_list = lower_list - 1
+                        lower_list = lower_list - 5
+
             elif user_input.isdigit():
 
                 int_input = int(user_input)
@@ -176,14 +188,14 @@ def search_games(given_game):
                     break # Breaking the inner for loop
 
                 else:
-                    print("You did not enter in a valid item number")
+                    print("You did not enter in a valid item number", end="\n\n")
 
             elif user_input == "":  # User wants to quit
                 app_link = None
 
                 break
             else:
-                print("You did not enter a digit try again ", end="")
+                print("You did not enter a digit try again ", end="\n\n")
 
     except Exception as e:  # No results found
 
@@ -420,15 +432,26 @@ def ask_game_to_remove():
 
 
 def introduction():
+
     tprint("Steam Price Checker", font="small")
+    tprint("Welcome...", font="small")
+    tprint(getpass.getuser(), font="small")
+
+def favorite_list_intro():
+
+    tprint("Favorite List Menu", font="small")
+
 
 def option_b():
+
+    favorite_list_intro()
 
     while True:
 
         print("(A) - Check price of your favorite list")
         print("(B) - Add new game to favorite list")
         print("(C) - Remove a game from favorite list")
+        print("(D) - What is on my favorite list?")
         user_choice = input("What would you like to do?: ")
         print()
 
@@ -438,12 +461,15 @@ def option_b():
             add_game_favorite()
         elif user_choice.lower() == 'c':
             ask_game_to_remove()
+        elif user_choice.lower() == 'd':
+            print_favorite_list()
         elif user_choice.lower() == '': # User want to quit
             break
 
 
 def free_to_play():
 
+    # Returns the list of play for free games with their link in a dictionary
     respond = Request(app_sale_page, headers={'User-Agent': 'XYZ/3.0'})
 
     response = urlopen(respond, timeout=3).read()
@@ -455,12 +481,50 @@ def free_to_play():
 
     trs = table.find_all('tr')
 
+    # Creating a dictionary that will hold all of the free games and the link it is associated with
+    output = dict()
+
     for tr in trs:
 
-        if tr.find('span', class_="category sales-play-for-free") != None:
+        # Play for free row traits
+        if tr.find('span', class_="category sales-play-for-free") is not None:
 
             tds = tr.find_all('td')
-            print(tds[2].a.text)
+            game_name = tds[2].a.text
+            game_link = steam_store + tds[2].a["href"]
+
+            output[game_name] = game_link
+
+    return output
+
+
+def free_game_intro():
+
+    # Intro for the free game
+    tprint("Play For Free Games!", font="small")
+
+
+def option_c():
+
+    free_game_intro()
+
+    print("Fetching data...", end="\n\n")
+
+    # Gather the list of free to play games
+    play_free_games = free_to_play()
+
+    if play_free_games.__len__() == 0:
+        print("There are no play for free games right now :(", end="\n\n")
+    else:
+
+        game_counter = 1
+        str_output = ""
+
+        for key in play_free_games:
+            str_output += str(game_counter) + ". " + "[" + key + "]: " + play_free_games[key] + "\n"
+            game_counter += 1
+
+        print(str_output)
 
 
 def start_up():
@@ -478,7 +542,7 @@ def start_up():
         print_favorite_list_with_price()
 
 # Main loop
-if __name__ == '__main__':
+def main():
 
     introduction()
 
@@ -497,7 +561,10 @@ if __name__ == '__main__':
         elif menu_input.lower() == "b":
             option_b()
         elif menu_input.lower() == "c":
-            free_to_play()
+            option_c()
         elif menu_input == "":
             break
 
+if __name__ == "__main__":
+
+    main()
