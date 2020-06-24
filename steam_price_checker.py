@@ -3,6 +3,7 @@
 # ------
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
+from art import tprint
 
 # Constants
 max_display = 5
@@ -10,6 +11,7 @@ game_title = ""
 app_type = ""
 app_link = ""
 app_before = 'https://steamdb.info'
+app_sale_page = 'https://steamdb.info/sales/'
 
 # Link with inquiry
 inquiry = 'https://steamdb.info/search/?a=app&q='
@@ -193,6 +195,8 @@ def search_games(given_game):
 
 
 def option_a():
+
+    tprint("Search Game Price!", font="small")
     while True:
 
         input_game_title = input("Search for game: ")
@@ -208,6 +212,7 @@ def option_a():
 
 
 def add_game_favorite():
+
     # Function that performs adding to the favorite list
     # This can let you add games to a watch list which gives you updates on the current price
     # and when you run the script the first time it will run through the games on your favorite list
@@ -215,43 +220,56 @@ def add_game_favorite():
     list_of_games = []
 
     # Read the list of games that is in the file first
-    file = open("data.txt", "r")
+    file = open("data.txt", "r", errors="ignore")
 
-    # Need to go online and find title
-    # Writing the file
-    game_name = input("Which game would you like to add?: ")
-    input_game_title = game_name.replace(" ", "+")  # Replace any spaces with percentage signs
+    while True:
 
-    # Opening and getting the webpage source
-    respond = Request(inquiry + input_game_title, headers={'User-Agent': 'XYZ/3.0'})
-    response = urlopen(respond, timeout=5).read()
+        # Need to go online and find title
+        # Writing the file
+        game_name = input("Which game would you like to add?: ")
+        input_game_title = game_name.replace(" ", "+")  # Replace any spaces with percentage signs
 
-    soup = BeautifulSoup(response, 'html.parser')
+        if input_game_title == "":
 
-    link = search_games(game_name)
+            # User wants to quit
+            break
+        else:
 
-    # Make sure that the link returned from search is not None before we write it into the file
-    if link is not None:
+            # Opening and getting the webpage source
+            respond = Request(inquiry + input_game_title, headers={'User-Agent': 'XYZ/3.0'})
+            response = urlopen(respond, timeout=5).read()
 
-        text = "[" + game_title + "]:"+ app_before + link
+            soup = BeautifulSoup(response, 'html.parser')
 
-        file = open("data.txt", "a", encoding='utf-8')
-        file.write(text + "\n")
+            link = search_games(game_name)
 
-        print(game_title, "have been successfully added to your favorite list", end="\n\n")
+            # Make sure that the link returned from search is not None before we write it into the file
+            if link is not None:
+
+                text = "[" + game_title + "]:"+ app_before + link
+
+                file = open("data.txt", "a", encoding='utf-8')
+                file.write(text + "\n")
+
+                print(game_title, "have been successfully added to your favorite list", end="\n\n")
 
     file.close()
 
 def print_favorite_list_with_price():
 
-    file = open("data.txt", "r+", encoding="utf-8-sig")
+    file = open("data.txt", "r+", encoding="utf-8-sig", errors="ignore")
     file_array = file.read().splitlines()
 
-    output = "Favorite List!\n" + ("-" * 14) + "\n"
+    tprint("Favorite   List!", font="small")
+    print("Fetching data...", end="\n\n")
+    output = ""
 
     if len(file_array) == 0:
         print("There are no games in your favorite list :(", end="\n\n")
     else:
+
+        global counter
+        counter = 1
 
         for line in file_array:
 
@@ -261,23 +279,24 @@ def print_favorite_list_with_price():
                 line = line.strip("\n")
                 r_bracket = line.rfind("]")
                 link = line[r_bracket + 2:]
-                output += line[0:r_bracket+1] + get_link_price(link) + "\n"
+                output += str(counter) + ". " + line[0:r_bracket + 1] + " is currently " + get_link_price(link) + "\n"
+                counter += 1
             else:
 
                 # Not last item
                 line = line.strip("\n")
                 r_bracket = line.rfind("]")
                 link = line[r_bracket+2:]
-                output += line[0:r_bracket+1] + get_link_price(link) + "\n\n"
+                output += str(counter) + ". " + line[0:r_bracket + 1] + " is currently " + get_link_price(link) + "\n\n"
+                counter += 1
 
         print(output)
     file.close()
 
 
-
 def print_favorite_list():
 
-    file = open("data.txt", "r+", encoding="utf-8-sig")
+    file = open("data.txt", "r+", encoding="utf-8-sig", errors="ignore")
     file_array = file.read().splitlines()
 
     if len(file_array) == 0:
@@ -286,7 +305,8 @@ def print_favorite_list():
 
         global counter
         counter = 1
-        output = "Favorite List!\n" + ("-" * 14) + "\n"
+        tprint("Favorite List!", font="small")
+        output = ""
 
         for line in file_array:
 
@@ -347,7 +367,7 @@ def remove_game(index_to_delete):
 
     # This function will be removing game from the favorite list
     # Getting the lines and putting it into an array
-    file = open('data.txt', 'r', encoding="utf-8-sig")
+    file = open('data.txt', 'r', encoding="utf-8-sig", errors="ignore")
     lines = file.readlines()
     file.close()
 
@@ -385,6 +405,7 @@ def ask_game_to_remove():
                 print()
                 print("You must enter in an digit to remove a game", end="\n\n")
             elif int(input_index) < counter and int(input_index) >= 1:
+
                 removed_game = remove_game(int(input_index) - 1)
 
                 removed_game = removed_game[0:removed_game.find("]") + 1]
@@ -397,6 +418,9 @@ def ask_game_to_remove():
                 print()
                 print("Invalid game to remove from the favorite list", end="\n\n")
 
+
+def introduction():
+    tprint("Steam Price Checker", font="small")
 
 def option_b():
 
@@ -419,14 +443,44 @@ def option_b():
 
 
 def free_to_play():
-    print("Not implemented yet")
+
+    respond = Request(app_sale_page, headers={'User-Agent': 'XYZ/3.0'})
+
+    response = urlopen(respond, timeout=3).read()
+
+    # Parsing into soup
+    soup = BeautifulSoup(response, 'lxml')
+
+    table = soup.find('table')
+
+    trs = table.find_all('tr')
+
+    for tr in trs:
+
+        if tr.find('span', class_="category sales-play-for-free") != None:
+
+            tds = tr.find_all('td')
+            print(tds[2].a.text)
 
 
-# def start_up():
+def start_up():
 
+    # When the program is ranned we will call the start_up method, which contains introduction
+    # And running the favorite list check
+    introduction()
+
+    file = open("data.txt", "r", encoding="utf-8-sig", errors="ignore")
+    file_array = file.readlines()
+
+    if len(file_array) != 0:
+
+        # We only print if the file is not empty
+        print_favorite_list_with_price()
 
 # Main loop
 if __name__ == '__main__':
+
+    introduction()
 
     while True:
 
@@ -443,8 +497,7 @@ if __name__ == '__main__':
         elif menu_input.lower() == "b":
             option_b()
         elif menu_input.lower() == "c":
-            # free_to_play()
-            print("Free play")
+            free_to_play()
         elif menu_input == "":
             break
 
