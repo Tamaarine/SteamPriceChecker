@@ -1,4 +1,14 @@
-from steam_price_checker import get_link_price
-from steam_price_checker import get_link_lowest_price
-from steam_price_checker import remove_game
+import pyautogui
+import keyboard
 
+punching = False
+
+while True:
+
+    if keyboard.is_pressed("."):
+        punching = True
+    if keyboard.is_pressed("/"):
+        punching = False
+
+    if punching:
+        pyautogui.click()
